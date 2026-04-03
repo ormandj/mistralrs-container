@@ -36,6 +36,30 @@ Compiled features: `cuda`, `cudnn`, `flash-attn`, `nccl`
 | `WITH_FEATURES` | `cuda,cudnn,flash-attn,nccl` | Cargo features |
 | `DOCKER_IMAGE_TAG` | auto-generated | Override output tag |
 
+## Updating to a New Release
+
+When a new mistral.rs version comes out:
+
+```bash
+# 1. Trigger CI build with the new version
+gh workflow run build.yml --field mistralrs_ref=v0.9.0 --field cuda_compute_cap=86
+
+# 2. Monitor the build
+gh run watch
+
+# 3. Once complete, update the deployment in homelab:
+#    Edit kubernetes/quasar/apps/mistralrs/ manifests to use the new image tag
+#    kubectl apply -f ...
+```
+
+Or build locally on an amd64 machine:
+
+```bash
+cd docker
+MISTRALRS_REF=v0.9.0 DOCKER_IMAGE_TAG=ghcr.io/ormandj/mistralrs:0.9.0-cuda86 ./build-image.sh
+docker push ghcr.io/ormandj/mistralrs:0.9.0-cuda86
+```
+
 ## Building on ARM Mac
 
 Cross-compiling CUDA kernels under QEMU requires enormous memory (>48GB) and will
