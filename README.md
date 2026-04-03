@@ -9,7 +9,7 @@ The upstream project doesn't ship images with flash-attn or NCCL enabled, so we 
 ```bash
 # Build (requires amd64 machine or builder with CUDA — see below)
 cd docker
-MISTRALRS_REF=main ./build-image.sh
+MISTRALRS_REF=master ./build-image.sh
 
 # Push
 docker push ghcr.io/ormandj/mistralrs:cuda86-<hash>
@@ -30,7 +30,7 @@ Compiled features: `cuda`, `cudnn`, `flash-attn`, `nccl`
 
 | Variable | Default | Description |
 |---|---|---|
-| `MISTRALRS_REF` | `main` | Git ref (tag, branch, commit hash) |
+| `MISTRALRS_REF` | `master` | Git ref (tag, branch, commit hash) |
 | `CUDA_COMPUTE_CAP` | `86` | Target GPU (86=RTX 3090, 89=RTX 4090, 90=H100) |
 | `CUDA_VERSION` | `13.2.0` | CUDA toolkit version |
 | `WITH_FEATURES` | `cuda,cudnn,flash-attn,nccl` | Cargo features |

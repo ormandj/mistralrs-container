@@ -2,7 +2,7 @@
 # Build mistral.rs from source and install binaries to /install
 set -euo pipefail
 
-MISTRALRS_REF="${1:-main}"
+MISTRALRS_REF="${1:-master}"
 MISTRALRS_REPO="https://github.com/EricLBuehler/mistral.rs.git"
 WITH_FEATURES="${WITH_FEATURES:-cuda,cudnn,flash-attn,nccl}"
 CUDA_COMPUTE_CAP="${CUDA_COMPUTE_CAP:-86}"

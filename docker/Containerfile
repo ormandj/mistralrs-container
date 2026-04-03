@@ -14,7 +14,7 @@ FROM nvidia/cuda:${CUDA_VERSION}-cudnn-devel-ubuntu${UBUNTU_VERSION} AS builder
 ENV DEBIAN_FRONTEND=noninteractive
 
 ARG CUDA_COMPUTE_CAP=86
-ARG MISTRALRS_REF=main
+ARG MISTRALRS_REF=master
 ARG WITH_FEATURES="cuda,cudnn,flash-attn,nccl"
 
 RUN apt-get update -qq && apt-get install -y -qq --no-install-recommends \

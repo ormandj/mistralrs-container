@@ -3,14 +3,14 @@
 # Build mistral.rs container image with version pinning
 #
 # Usage:
-#   ./build-image.sh                                    # Build with defaults (latest main)
+#   ./build-image.sh                                    # Build with defaults (latest master)
 #   ./build-image.sh --no-cache                         # Build without cache
 #   MISTRALRS_REF=v0.8.1 ./build-image.sh              # Pin to a tag
-#   MISTRALRS_REF=main ./build-image.sh                 # Pin to branch
+#   MISTRALRS_REF=master ./build-image.sh               # Pin to branch
 #   CUDA_COMPUTE_CAP=89 ./build-image.sh                # Target different GPU (Ada)
 #
 # Environment variables:
-#   MISTRALRS_REF         mistral.rs commit/tag/branch (default: main)
+#   MISTRALRS_REF         mistral.rs commit/tag/branch (default: master)
 #   CUDA_COMPUTE_CAP      CUDA compute capability (default: 86)
 #   CUDA_VERSION          CUDA toolkit version (default: 13.2.0)
 #   DOCKER_IMAGE_TAG      Override image tag
@@ -26,7 +26,7 @@ for arg in "$@"; do
             echo "Usage: ./build-image.sh [--no-cache]"
             echo ""
             echo "Environment variables:"
-            echo "  MISTRALRS_REF      Pin mistral.rs to commit/tag/branch (default: main)"
+            echo "  MISTRALRS_REF      Pin mistral.rs to commit/tag/branch (default: master)"
             echo "  CUDA_COMPUTE_CAP   Target GPU compute capability (default: 86)"
             echo "  CUDA_VERSION       CUDA toolkit version (default: 13.2.0)"
             echo "  DOCKER_IMAGE_TAG   Override output image tag"
@@ -37,7 +37,7 @@ for arg in "$@"; do
 done
 
 MISTRALRS_REPO="https://github.com/EricLBuehler/mistral.rs.git"
-MISTRALRS_REF="${MISTRALRS_REF:-main}"
+MISTRALRS_REF="${MISTRALRS_REF:-master}"
 CUDA_COMPUTE_CAP="${CUDA_COMPUTE_CAP:-86}"
 CUDA_VERSION="${CUDA_VERSION:-13.2.0}"
 WITH_FEATURES="${WITH_FEATURES:-cuda,cudnn,flash-attn,nccl}"

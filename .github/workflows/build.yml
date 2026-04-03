@@ -9,7 +9,7 @@ on:
       mistralrs_ref:
         description: "mistral.rs commit hash, tag, or branch"
         required: false
-        default: "main"
+        default: "master"
       cuda_compute_cap:
         description: "CUDA compute capability (e.g. 86 for RTX 3090)"
         required: false
@@ -44,7 +44,7 @@ jobs:
 
       - name: Build container image
         env:
-          MISTRALRS_REF: ${{ inputs.mistralrs_ref || 'main' }}
+          MISTRALRS_REF: ${{ inputs.mistralrs_ref || 'master' }}
           CUDA_COMPUTE_CAP: ${{ inputs.cuda_compute_cap || '86' }}
           DOCKER_IMAGE_TAG: ghcr.io/${{ github.repository_owner }}/mistralrs:cuda${{ inputs.cuda_compute_cap || '86' }}-latest
         run: |
