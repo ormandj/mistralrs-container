@@ -1,0 +1,62 @@
+# mistral.rs multi-stage build for CUDA inference
+# Builds from source with flash-attn + NCCL tensor parallelism
+#
+# Features: cuda, cudnn, flash-attn, nccl
+# Binaries: mistralrs, mistralrs-server, mistralrs-bench, mistralrs-web-chat
+
+ARG CUDA_VERSION=13.2.0
+ARG UBUNTU_VERSION=24.04
+
+# ── Builder ───────────────────────────────────────────────────────────
+
+FROM nvidia/cuda:${CUDA_VERSION}-cudnn-devel-ubuntu${UBUNTU_VERSION} AS builder
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+ARG CUDA_COMPUTE_CAP=86
+ARG MISTRALRS_REF=main
+ARG WITH_FEATURES="cuda,cudnn,flash-attn,nccl"
+
+RUN apt-get update -qq && apt-get install -y -qq --no-install-recommends \
+    build-essential git curl libssl-dev pkg-config ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN curl https://sh.rustup.rs -sSf | bash -s -- -y
+ENV PATH="/root/.cargo/bin:${PATH}"
+
+WORKDIR /build
+COPY install-mistralrs.sh /build/
+RUN bash /build/install-mistralrs.sh "${MISTRALRS_REF}"
+
+# ── Runtime ───────────────────────────────────────────────────────────
+
+FROM nvidia/cuda:${CUDA_VERSION}-cudnn-runtime-ubuntu${UBUNTU_VERSION} AS runtime
+
+ENV DEBIAN_FRONTEND=noninteractive
+ENV PATH="/usr/local/bin:${PATH}"
+
+RUN apt-get update -qq && apt-get install -y -qq --no-install-recommends \
+    libomp-dev libssl3t64 ca-certificates curl \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN useradd --system --create-home --shell /sbin/nologin mistralrs
+
+COPY --from=builder /install/bin/mistralrs /usr/local/bin/
+COPY --from=builder /install/bin/mistralrs-server /usr/local/bin/
+COPY --from=builder /install/bin/mistralrs-bench /usr/local/bin/
+COPY --from=builder /install/bin/mistralrs-web-chat /usr/local/bin/
+COPY --from=builder /install/chat_templates /chat_templates
+COPY --from=builder /install/mistralrs-version /tmp/
+
+ARG CUDA_COMPUTE_CAP=86
+ARG MISTRALRS_REF=unknown
+RUN echo "mistralrs: $(cat /tmp/mistralrs-version)" > /versions.txt && \
+    echo "ref: ${MISTRALRS_REF}" >> /versions.txt && \
+    echo "cuda_compute_cap: ${CUDA_COMPUTE_CAP}" >> /versions.txt && \
+    echo "build_timestamp: $(date -u +%Y-%m-%dT%H:%M:%SZ)" >> /versions.txt
+
+ENV HUGGINGFACE_HUB_CACHE=/data PORT=80
+
+WORKDIR /models
+USER mistralrs
+ENTRYPOINT ["mistralrs-server"]

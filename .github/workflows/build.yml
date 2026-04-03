@@ -1,0 +1,62 @@
+name: Build mistral.rs Container
+
+on:
+  schedule:
+    - cron: "0 6 * * 1"  # Weekly Monday 6am UTC
+
+  workflow_dispatch:
+    inputs:
+      mistralrs_ref:
+        description: "mistral.rs commit hash, tag, or branch"
+        required: false
+        default: "main"
+      cuda_compute_cap:
+        description: "CUDA compute capability (e.g. 86 for RTX 3090)"
+        required: false
+        default: "86"
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Free up disk space
+        run: |
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL
+          sudo docker system prune -af
+          df -h
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build container image
+        env:
+          MISTRALRS_REF: ${{ inputs.mistralrs_ref || 'main' }}
+          CUDA_COMPUTE_CAP: ${{ inputs.cuda_compute_cap || '86' }}
+          DOCKER_IMAGE_TAG: ghcr.io/${{ github.repository_owner }}/mistralrs:cuda${{ inputs.cuda_compute_cap || '86' }}-latest
+        run: |
+          chmod +x docker/build-image.sh
+          docker/build-image.sh
+
+      - name: Push to GitHub Container Registry
+        env:
+          CUDA_COMPUTE_CAP: ${{ inputs.cuda_compute_cap || '86' }}
+        run: |
+          IMAGE="ghcr.io/${{ github.repository_owner }}/mistralrs"
+          docker push "${IMAGE}:cuda${CUDA_COMPUTE_CAP}-latest"
+          DATE_TAG=$(date -u +%Y-%m-%d)
+          docker tag "${IMAGE}:cuda${CUDA_COMPUTE_CAP}-latest" "${IMAGE}:cuda${CUDA_COMPUTE_CAP}-${DATE_TAG}"
+          docker push "${IMAGE}:cuda${CUDA_COMPUTE_CAP}-${DATE_TAG}"
